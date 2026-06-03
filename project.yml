@@ -44,6 +44,9 @@ targets:
         LSApplicationCategoryType: public.app-category.games
         ITSAppUsesNonExemptEncryption: false
         NSUserTrackingUsageDescription: "広告のパーソナライズと分析のためにトラッキングの許可をお願いします。 / We use tracking for personalized ads and analytics."
+        GADApplicationIdentifier: ca-app-pub-9404799280370656~8742537207
+        SKAdNetworkItems:
+          - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork
         UILaunchScreen:
           UIColorName: ""
         UISupportedInterfaceOrientations:

@@ -2,7 +2,7 @@ import SwiftUI
 import GoogleMobileAds
 
 struct BannerAdView: UIViewRepresentable {
-    private let adUnitID = "ca-app-pub-3940256099942544/2435281174"
+    private let adUnitID = "ca-app-pub-9404799280370656/6116373863"
 
     func makeUIView(context: Context) -> BannerView {
         let banner = BannerView(adSize: GADAdSizeBanner)
