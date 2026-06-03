@@ -1,0 +1,57 @@
+name: PeeVsZombies
+options:
+  bundleIdPrefix: com.tokyonasu
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: 1
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 83VGKGSQUH
+
+packages:
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads
+    exactVersion: 11.13.0
+
+targets:
+  PeeVsZombies:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - PeeVsZombies
+    dependencies:
+      - package: GoogleMobileAds
+    settings:
+      base:
+        PRODUCT_NAME: PeeVsZombies
+        PRODUCT_BUNDLE_IDENTIFIER: com.tokyonasu.peevsZombies
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_FILE: PeeVsZombies/Resources/Info.plist
+    info:
+      path: PeeVsZombies/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: "ションベンvsゾンビ"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSRequiresIPhoneOS: true
+        LSApplicationCategoryType: public.app-category.games
+        ITSAppUsesNonExemptEncryption: false
+        NSUserTrackingUsageDescription: "広告のパーソナライズと分析のためにトラッキングの許可をお願いします。 / We use tracking for personalized ads and analytics."
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIUserInterfaceStyle: Dark
