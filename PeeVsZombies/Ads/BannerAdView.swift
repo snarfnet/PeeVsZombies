@@ -5,19 +5,18 @@ struct BannerAdView: UIViewRepresentable {
     private let adUnitID = "ca-app-pub-9404799280370656/6116373863"
 
     func makeUIView(context: Context) -> BannerView {
-        let banner = BannerView(adSize: GADAdSizeBanner)
+        let banner = BannerView()
         banner.adUnitID = adUnitID
-        banner.rootViewController = window()?.rootViewController
-        banner.load(GADRequest())
+        DispatchQueue.main.async {
+            guard let windowScene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+                ?? UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+            let root = windowScene.windows.first(where: \.isKeyWindow)?.rootViewController
+            banner.rootViewController = root
+            banner.load(Request())
+        }
         return banner
     }
 
     func updateUIView(_ uiView: BannerView, context: Context) {}
-
-    private func window() -> UIWindow? {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first(where: { $0.activationState == .foregroundActive })
-            .flatMap { $0.windows.first(where: \.isKeyWindow) }
-    }
 }

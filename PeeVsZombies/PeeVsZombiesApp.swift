@@ -18,15 +18,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        MobileAds.shared.start(completionHandler: nil)
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
         return true
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            if #available(iOS 14, *) {
-                ATTrackingManager.requestTrackingAuthorization { _ in }
-            }
+            ATTrackingManager.requestTrackingAuthorization { _ in }
         }
     }
 }

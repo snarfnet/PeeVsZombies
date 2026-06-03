@@ -1,10 +1,11 @@
 import Foundation
 import GoogleMobileAds
+import UIKit
 
 @MainActor
 class InterstitialAdManager: NSObject, ObservableObject {
-    private let adUnitID = "ca-app-pub-3940256099942544/4411468910"
-    private var interstitial: InterstitialAd?
+    private let adUnitID = "ca-app-pub-9404799280370656/6116373863"
+    private var interstitial: GADInterstitialAd?
 
     override init() {
         super.init()
@@ -13,8 +14,8 @@ class InterstitialAdManager: NSObject, ObservableObject {
 
     private func loadAd() async {
         do {
-            interstitial = try await InterstitialAd.load(
-                with: adUnitID,
+            interstitial = try await GADInterstitialAd.load(
+                withAdUnitID: adUnitID,
                 request: GADRequest()
             )
         } catch {
@@ -33,7 +34,7 @@ class InterstitialAdManager: NSObject, ObservableObject {
               let root = windowScene.windows.first(where: \.isKeyWindow)?.rootViewController
         else { return }
 
-        ad.present(from: root)
+        ad.present(fromRootViewController: root)
         interstitial = nil
         Task { await loadAd() }
     }
