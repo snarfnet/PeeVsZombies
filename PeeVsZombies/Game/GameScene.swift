@@ -418,15 +418,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             spawnZombie()
         }
 
-        // Move zombies
+        // Move zombies toward cliff (left to right)
         let baseSpeed: CGFloat = 55
         for zombie in zombies where !zombie.isDead {
             let speed = baseSpeed * zombie.zombieType.speedMultiplier
-            zombie.physicsBody?.velocity.dx = -speed
+            zombie.physicsBody?.velocity.dx = speed
             zombie.physicsBody?.velocity.dy = min(zombie.physicsBody?.velocity.dy ?? 0, 50)
 
             // Check if reached cliff wall
-            if zombie.position.x <= cliffX + 22 {
+            if zombie.position.x >= cliffX - 12 {
                 // zombie reached player
                 zombie.isDead = true
                 zombie.removeFromParent()
