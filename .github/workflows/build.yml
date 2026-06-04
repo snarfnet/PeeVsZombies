@@ -142,3 +142,59 @@ jobs:
           -t ios \
           --apiKey WDXGY9WX55 \
           --apiIssuer 2be0734f-943a-4d61-9dc9-5d9045c46fec
+
+    - name: Add uploaded build to TestFlight group
+      run: |
+        ruby << 'RUBY'
+        require "jwt"
+        require "json"
+        require "net/http"
+        require "openssl"
+        require "uri"
+
+        key_id = "WDXGY9WX55"
+        issuer_id = "2be0734f-943a-4d61-9dc9-5d9045c46fec"
+        bundle_id = "com.tokyonasu.peevsZombies"
+        build_number = ENV.fetch("BUILD_NUM")
+        group_name = "Internal Testers"
+        private_key = OpenSSL::PKey.read(File.read("/tmp/asc_key.p8"))
+        token = JWT.encode(
+          { iss: issuer_id, iat: Time.now.to_i, exp: Time.now.to_i + 1200, aud: "appstoreconnect-v1" },
+          private_key,
+          "ES256",
+          { kid: key_id }
+        )
+
+        def request(uri, token, method = Net::HTTP::Get, body = nil)
+          req = method.new(uri)
+          req["Authorization"] = "Bearer #{token}"
+          req["Content-Type"] = "application/json" if body
+          req.body = body if body
+          Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+        end
+
+        def get_json(path, token, params = {})
+          uri = URI("https://api.appstoreconnect.apple.com/v1#{path}")
+          uri.query = URI.encode_www_form(params) unless params.empty?
+          res = request(uri, token)
+          abort("App Store Connect GET #{path} failed: #{res.code} #{res.body}") unless res.is_a?(Net::HTTPSuccess)
+          JSON.parse(res.body)
+        end
+
+        app = get_json("/apps", token, { "filter[bundleId]" => bundle_id, "limit" => 1 }).fetch("data").first
+        abort("App not found for #{bundle_id}") unless app
+
+        build = get_json("/builds", token, { "filter[app]" => app["id"], "filter[version]" => build_number, "limit" => 1 }).fetch("data").first
+        abort("Build #{build_number} not found in App Store Connect") unless build
+
+        group = get_json("/betaGroups", token, { "filter[app]" => app["id"], "limit" => 50 }).fetch("data").find do |candidate|
+          candidate.fetch("attributes", {}).fetch("name", nil) == group_name
+        end
+        abort("TestFlight group not found: #{group_name}") unless group
+
+        uri = URI("https://api.appstoreconnect.apple.com/v1/betaGroups/#{group["id"]}/relationships/builds")
+        body = JSON.dump({ data: [{ type: "builds", id: build["id"] }] })
+        res = request(uri, token, Net::HTTP::Post, body)
+        abort("Adding build #{build_number} to #{group_name} failed: #{res.code} #{res.body}") unless res.code == "204" || res.is_a?(Net::HTTPSuccess)
+        puts "Added build #{build_number} to TestFlight group: #{group_name}"
+        RUBY
