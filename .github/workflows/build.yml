@@ -184,8 +184,16 @@ jobs:
         app = get_json("/apps", token, { "filter[bundleId]" => bundle_id, "limit" => 1 }).fetch("data").first
         abort("App not found for #{bundle_id}") unless app
 
-        build = get_json("/builds", token, { "filter[app]" => app["id"], "filter[version]" => build_number, "limit" => 1 }).fetch("data").first
-        abort("Build #{build_number} not found in App Store Connect") unless build
+        build = nil
+        30.times do |attempt|
+          build = get_json("/builds", token, { "filter[app]" => app["id"], "filter[version]" => build_number, "limit" => 1 }).fetch("data").first
+          state = build&.fetch("attributes", {})&.fetch("processingState", nil)
+          break if build && state == "VALID"
+
+          puts "Waiting for build #{build_number} to become VALID in App Store Connect (attempt #{attempt + 1}/30, state: #{state || "not found"})"
+          sleep 20
+        end
+        abort("Build #{build_number} did not become VALID in App Store Connect") unless build
 
         group = get_json("/betaGroups", token, { "filter[app]" => app["id"], "limit" => 50 }).fetch("data").find do |candidate|
           candidate.fetch("attributes", {}).fetch("name", nil) == group_name
