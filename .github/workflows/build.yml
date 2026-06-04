@@ -44,6 +44,55 @@ jobs:
         echo "$ASC_API_KEY_CONTENT" | base64 -D > ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8
         cp ~/.appstoreconnect/private_keys/AuthKey_WDXGY9WX55.p8 /tmp/asc_key.p8
 
+    - name: Reclaim CI development certificate slot
+      run: |
+        gem install jwt --no-document
+        ruby << 'RUBY'
+        require "jwt"
+        require "json"
+        require "net/http"
+        require "openssl"
+        require "uri"
+
+        key_id = "WDXGY9WX55"
+        issuer_id = "2be0734f-943a-4d61-9dc9-5d9045c46fec"
+        private_key = OpenSSL::PKey.read(File.read("/tmp/asc_key.p8"))
+        token = JWT.encode(
+          { iss: issuer_id, iat: Time.now.to_i, exp: Time.now.to_i + 1200, aud: "appstoreconnect-v1" },
+          private_key,
+          "ES256",
+          { kid: key_id }
+        )
+
+        def request(uri, token, method = Net::HTTP::Get)
+          req = method.new(uri)
+          req["Authorization"] = "Bearer #{token}"
+          Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
+        end
+
+        uri = URI("https://api.appstoreconnect.apple.com/v1/certificates?filter[certificateType]=IOS_DEVELOPMENT&limit=200")
+        res = request(uri, token)
+        abort("Certificate list failed: #{res.code} #{res.body}") unless res.is_a?(Net::HTTPSuccess)
+
+        certs = JSON.parse(res.body).fetch("data", [])
+        ci_certs = certs.select do |cert|
+          attrs = cert.fetch("attributes", {})
+          text = [attrs["displayName"], attrs["name"]].compact.join(" ")
+          text.include?("Created via API") || text.include?(key_id)
+        end
+
+        ci_certs.each do |cert|
+          attrs = cert.fetch("attributes", {})
+          label = attrs["displayName"] || attrs["name"] || cert["id"]
+          delete_uri = URI("https://api.appstoreconnect.apple.com/v1/certificates/#{cert["id"]}")
+          delete_res = request(delete_uri, token, Net::HTTP::Delete)
+          abort("Certificate delete failed for #{label}: #{delete_res.code} #{delete_res.body}") unless delete_res.code == "204"
+          puts "Revoked stale CI development certificate: #{label}"
+        end
+
+        puts "No stale CI development certificates found." if ci_certs.empty?
+        RUBY
+
     - name: Build Archive
       run: |
         xcodebuild archive \
