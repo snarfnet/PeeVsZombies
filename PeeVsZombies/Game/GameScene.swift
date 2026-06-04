@@ -537,13 +537,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let leftArm = SKShapeNode(rect: CGRect(x: -18, y: 11, width: 16, height: 5), cornerRadius: 2.5)
         leftArm.fillColor = .init(red: 0.2, green: 0.22, blue: 0.18, alpha: 1)
         leftArm.strokeColor = .clear
-        leftArm.rotation = -0.25
+        leftArm.zRotation = -0.25
         leftArm.zPosition = 1
 
         let rightArm = SKShapeNode(rect: CGRect(x: -2, y: 10, width: 18, height: 5), cornerRadius: 2.5)
         rightArm.fillColor = .init(red: 0.2, green: 0.22, blue: 0.18, alpha: 1)
         rightArm.strokeColor = .clear
-        rightArm.rotation = 0.14
+        rightArm.zRotation = 0.14
         rightArm.zPosition = 5
 
         let streamOriginMarker = SKShapeNode(circleOfRadius: 2.2)
