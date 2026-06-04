@@ -459,12 +459,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let zombie = ZombieNode(type: type, sceneSize: size)
 
         let spawnX = CGFloat.random(in: 30...cliffX * 0.4)
-        zombie.position = CGPoint(x: spawnX, y: groundY)
+        zombie.position = CGPoint(x: spawnX, y: groundY + 24)
         zombie.zPosition = 7
 
-        // Rise-from-ground animation
-        zombie.position.y = groundY - 50
-        let rise = SKAction.moveBy(x: 0, y: 50, duration: 0.5)
+        // Rise-from-ground animation (scale effect)
+        zombie.setScale(0.01)
+        let rise = SKAction.scale(to: 1.0, duration: 0.4)
         rise.timingMode = .easeOut
         zombie.run(rise)
 
