@@ -5,6 +5,7 @@ import SwiftUI
 class GameViewController: UIViewController {
     var gameState: GameState!
     var onGameOver: (() -> Void)?
+    var onGameClear: (() -> Void)?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,6 +31,7 @@ class GameViewController: UIViewController {
         scene.scaleMode = .resizeFill
         scene.gameState = gameState
         scene.onGameOver = onGameOver
+        scene.onGameClear = onGameClear
         skView.presentScene(scene, transition: SKTransition.fade(withDuration: 0.4))
     }
 }
@@ -38,11 +40,13 @@ class GameViewController: UIViewController {
 struct GameView: UIViewControllerRepresentable {
     @ObservedObject var gameState: GameState
     var onGameOver: () -> Void
+    var onGameClear: () -> Void
 
     func makeUIViewController(context: Context) -> GameViewController {
         let vc = GameViewController()
         vc.gameState = gameState
         vc.onGameOver = onGameOver
+        vc.onGameClear = onGameClear
         return vc
     }
 

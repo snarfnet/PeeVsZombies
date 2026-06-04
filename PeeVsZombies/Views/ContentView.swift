@@ -4,13 +4,20 @@ struct ContentView: View {
     @StateObject private var gameState = GameState()
     @State private var isPlaying = false
     @State private var showGameOver = false
+    @State private var showGameClear = false
 
     var body: some View {
         ZStack {
             if isPlaying {
-                GameView(gameState: gameState) {
-                    showGameOver = true
-                }
+                GameView(
+                    gameState: gameState,
+                    onGameOver: {
+                        showGameOver = true
+                    },
+                    onGameClear: {
+                        showGameClear = true
+                    }
+                )
                 .ignoresSafeArea()
                 .overlay(alignment: .bottom) {
                     BannerAdView()
@@ -18,39 +25,67 @@ struct ContentView: View {
                 }
 
                 if showGameOver {
-                    GameOverOverlay(
+                    ResultOverlay(
+                        title: "GAME OVER",
+                        subtitle: "The horde reached the cliff.",
+                        color: .red,
                         score: gameState.score,
                         bestScore: gameState.bestScore,
-                        onRestart: {
-                            showGameOver = false
-                            gameState.reset()
-                        },
-                        onMenu: {
-                            showGameOver = false
-                            isPlaying = false
-                            gameState.reset()
-                        }
+                        primaryTitle: "Play Again",
+                        onPrimary: restart,
+                        onMenu: returnToMenu
+                    )
+                    .transition(.opacity)
+                }
+
+                if showGameClear {
+                    ResultOverlay(
+                        title: "ALL STAGES CLEAR",
+                        subtitle: "The Final Corpse is down.",
+                        color: .yellow,
+                        score: gameState.score,
+                        bestScore: gameState.bestScore,
+                        primaryTitle: "Run Again",
+                        onPrimary: restart,
+                        onMenu: returnToMenu
                     )
                     .transition(.opacity)
                 }
             } else {
                 MenuView(bestScore: gameState.bestScore) {
-                    gameState.reset()
+                    restart()
                     isPlaying = true
-                    showGameOver = false
                 }
             }
         }
         .animation(.easeInOut(duration: 0.3), value: isPlaying)
         .animation(.easeInOut(duration: 0.3), value: showGameOver)
+        .animation(.easeInOut(duration: 0.3), value: showGameClear)
         .preferredColorScheme(.dark)
+    }
+
+    private func restart() {
+        showGameOver = false
+        showGameClear = false
+        gameState.reset()
+    }
+
+    private func returnToMenu() {
+        showGameOver = false
+        showGameClear = false
+        isPlaying = false
+        gameState.reset()
     }
 }
 
-struct GameOverOverlay: View {
+struct ResultOverlay: View {
+    let title: String
+    let subtitle: String
+    let color: Color
     let score: Int
     let bestScore: Int
-    let onRestart: () -> Void
+    let primaryTitle: String
+    let onPrimary: () -> Void
     let onMenu: () -> Void
 
     @StateObject private var adManager = InterstitialAdManager()
@@ -60,20 +95,20 @@ struct GameOverOverlay: View {
             Color.black.opacity(0.78)
                 .ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                Text("GAME OVER")
-                    .font(.system(size: 44, weight: .black))
-                    .foregroundColor(.red)
-                    .shadow(color: .red.opacity(0.8), radius: 12)
+            VStack(spacing: 18) {
+                Text(title)
+                    .font(.system(size: 42, weight: .black))
+                    .foregroundColor(color)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .shadow(color: color.opacity(0.8), radius: 12)
 
-                Text("ゲームオーバー")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.red.opacity(0.8))
-
-                Spacer().frame(height: 8)
+                Text(subtitle)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.78))
 
                 VStack(spacing: 6) {
-                    Text("Score / スコア")
+                    Text("Score")
                         .font(.caption)
                         .foregroundColor(.gray)
                     Text("\(score)")
@@ -82,7 +117,7 @@ struct GameOverOverlay: View {
                 }
 
                 VStack(spacing: 4) {
-                    Text("Best / ベスト")
+                    Text("Best")
                         .font(.caption)
                         .foregroundColor(.gray)
                     Text("\(bestScore)")
@@ -90,10 +125,8 @@ struct GameOverOverlay: View {
                         .foregroundColor(.yellow)
                 }
 
-                Spacer().frame(height: 12)
-
-                Button(action: onRestart) {
-                    Text("もう一度 / Play Again")
+                Button(action: onPrimary) {
+                    Text(primaryTitle)
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.black)
                         .frame(maxWidth: .infinity)
@@ -103,7 +136,7 @@ struct GameOverOverlay: View {
                 }
 
                 Button(action: onMenu) {
-                    Text("メニュー / Menu")
+                    Text("Menu")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -119,7 +152,7 @@ struct GameOverOverlay: View {
                     .fill(Color.black.opacity(0.9))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
-                            .stroke(Color.red.opacity(0.6), lineWidth: 1.5)
+                            .stroke(color.opacity(0.6), lineWidth: 1.5)
                     )
             )
             .padding(.horizontal, 32)

@@ -1,4 +1,4 @@
-name: PeeVsZombies
+﻿name: PeeVsZombies
 options:
   bundleIdPrefix: com.tokyonasu
   deploymentTarget:
@@ -37,7 +37,7 @@ targets:
     info:
       path: PeeVsZombies/Resources/Info.plist
       properties:
-        CFBundleDisplayName: "ションベンvsゾンビ"
+        CFBundleDisplayName: "Pee vs Zombies"
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSRequiresIPhoneOS: true
