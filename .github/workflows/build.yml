@@ -52,6 +52,7 @@ jobs:
         require "json"
         require "net/http"
         require "openssl"
+        require "time"
         require "uri"
 
         key_id = "WDXGY9WX55"
@@ -70,16 +71,23 @@ jobs:
           Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(req) }
         end
 
-        uri = URI("https://api.appstoreconnect.apple.com/v1/certificates?filter[certificateType]=IOS_DEVELOPMENT&limit=200")
+        development_types = ["DEVELOPMENT", "IOS_DEVELOPMENT"]
+        uri = URI("https://api.appstoreconnect.apple.com/v1/certificates?limit=200")
         res = request(uri, token)
         abort("Certificate list failed: #{res.code} #{res.body}") unless res.is_a?(Net::HTTPSuccess)
 
         certs = JSON.parse(res.body).fetch("data", [])
-        ci_certs = certs.select do |cert|
+        development_certs = certs.select do |cert|
+          attrs = cert.fetch("attributes", {})
+          development_types.include?(attrs["certificateType"])
+        end
+
+        ci_certs = development_certs.select do |cert|
           attrs = cert.fetch("attributes", {})
           text = [attrs["displayName"], attrs["name"]].compact.join(" ")
           text.include?("Created via API") || text.include?(key_id)
         end
+        ci_certs = [development_certs.min_by { |cert| Time.parse(cert.fetch("attributes", {})["expirationDate"]) }] if ci_certs.empty? && development_certs.any?
 
         ci_certs.each do |cert|
           attrs = cert.fetch("attributes", {})
